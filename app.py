@@ -7,17 +7,18 @@ import numpy as np
 app = Flask(__name__)
 
 # Load the trained model
+MODEL_PATH = 'model_logistic_regression.pkl'
 try:
-    model = joblib.load('model_logistic_regression.pkl')
-    print("✅ Model loaded successfully.")
+    model = joblib.load(MODEL_PATH)
+    print(f"✅ Model loaded from '{MODEL_PATH}'")
 except Exception as e:
-    print("❌ Failed to load model:", str(e))
+    print(f"❌ Failed to load model from '{MODEL_PATH}': {e}")
     model = None
 
 # Health check route
 @app.route('/', methods=['GET'])
-def home():
-    return "Loan Prediction API is running"
+def health_check():
+    return "🚀 Loan Prediction API is live!"
 
 # Prediction route
 @app.route('/predict', methods=['POST'])
@@ -27,7 +28,7 @@ def predict():
 
     try:
         data = request.get_json(force=True)
-        print("📥 Received data:", data)
+        print("📥 Incoming request data:", data)
 
         features = data.get('features')
         if not isinstance(features, list):
@@ -36,13 +37,13 @@ def predict():
         input_array = np.array(features).reshape(1, -1)
         prediction = model.predict(input_array)
 
-        print("📤 Prediction:", prediction[0])
+        print("📤 Prediction result:", prediction[0])
         return jsonify({'prediction': int(prediction[0])})
     except Exception as e:
-        print("❌ Error during prediction:", str(e))
+        print("❌ Prediction error:", e)
         return jsonify({'error': str(e)}), 500
 
-# Bind to dynamic port for Render
+# Entry point for Render deployment
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))  # Render sets this dynamically
+    port = int(os.environ.get('PORT', 5000))  # Use dynamic port from environment
     app.run(host='0.0.0.0', port=port)
